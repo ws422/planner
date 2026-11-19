@@ -1,6 +1,6 @@
-// 후쿠오카 플래너 오프라인 지원 (버전 f1e703c7a9)
-const V = 'fkp-f1e703c7a9', FONTS = 'fkp-fonts';
-const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./photos/fukuoka-tower-day.jpg", "./photos/fukuoka-tower-night.jpg", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png", "./icons/apple-touch-icon.png", "./icons/favicon-64.png"];
+// 후쿠오카 플래너 오프라인 지원 (버전 81dae611d5)
+const V = 'fkp-81dae611d5', FONTS = 'fkp-fonts';
+const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./photos/fukuoka-tower-day.jpg", "./photos/fukuoka-tower-night.jpg", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png", "./icons/apple-touch-icon.png", "./icons/favicon-64.png", "./photos/area-bayside.jpg", "./photos/area-beppu.jpg", "./photos/area-dazaifu.jpg", "./photos/area-hakata.jpg", "./photos/area-itoshima.jpg", "./photos/area-mojiko.jpg", "./photos/area-momochi.jpg", "./photos/area-nakasu.jpg", "./photos/area-noko.jpg", "./photos/area-ohori.jpg", "./photos/area-tenjin.jpg", "./photos/area-uminaka.jpg", "./photos/area-yanagawa.jpg", "./photos/area-yufuin.jpg"];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(V).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
 });
