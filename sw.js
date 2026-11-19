@@ -1,5 +1,5 @@
-// 후쿠오카 플래너 오프라인 지원 (버전 17102a4c21)
-const V = 'fkp-17102a4c21', FONTS = 'fkp-fonts';
+// 후쿠오카 플래너 오프라인 지원 (버전 aea156da54)
+const V = 'fkp-aea156da54', FONTS = 'fkp-fonts';
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./photos/fukuoka-tower-day.jpg", "./photos/fukuoka-tower-night.jpg", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png", "./icons/apple-touch-icon.png", "./icons/favicon-64.png"];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(V).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
