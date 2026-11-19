@@ -704,7 +704,7 @@ small { font-size: 12.5px; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tl-ic { color: color-mix(in srgb, var(--c) 60%, #fff); } }
 /* 실제 사진 상단 */
 .hero.has-photo { height: clamp(440px, 122vw, 540px); background: #1B2540; }
-.hero-img.stock { object-position: 50% 35%; }
+.hero-img.stock { object-position: 50% 50%; }
 .hero.has-photo .hero-shade { background: linear-gradient(to bottom, rgba(8, 12, 28, .42) 0%, rgba(8, 12, 28, 0) 20%, rgba(8, 12, 28, 0) 42%, rgba(8, 12, 28, .72) 100%); }
 .credit { margin: 6px 0 0; text-align: center; font-size: 11.5px; color: var(--ink-3); }
 .credit a { color: inherit; }
@@ -3391,11 +3391,38 @@ const AREA_TONE = {
   beppu: ['#E07A4F', '#6E2828'], mojiko: ['#5C7FD6', '#1C2A66']
 };
 const SCENES = [['day', '낮'], ['night', '밤']];
-// 상단 사진 (Unsplash 라이선스, 무료 사용)
+// 상단 사진 (모두 Unsplash 라이선스) — 앱을 열 때마다 바로 전과 다른 사진이 나와요
 const HERO_PHOTOS = {
-  day: { src: 'photos/fukuoka-tower-day.jpg', by: 'Rap Dela Rea', url: 'https://unsplash.com/photos/S8TPedkoGXM', alt: '맑은 날 파란 하늘 아래 후쿠오카 타워' },
-  night: { src: 'photos/fukuoka-tower-night.jpg', by: 'Taewoo Kim', url: 'https://unsplash.com/photos/vKcWjhcAfxc', alt: '밤에 파랗게 불이 켜진 후쿠오카 타워' }
+  day: [
+    { f: 'hero-day-1.jpg', by: 'Leopold Maitre', u: '3msDfruIp4k', alt: ['해 질 녘 분홍빛 하늘이 비친 오호리 공원 호수', '夕暮れのピンク色の空が映る大濠公園の池'] },
+    { f: 'hero-day-2.jpg', by: 'Zion C', u: 'ovBw9UkuiDA', alt: ['후쿠오카 성터 해자 위로 핀 벚꽃', '福岡城跡の堀に咲く桜'] },
+    { f: 'hero-day-3.jpg', by: 'Nichika Sakurai', u: 'ur4N7oXpVls', alt: ['노을 진 텐진 하늘과 전깃줄', '夕焼けの天神の空と電線'] },
+    { f: 'hero-day-4.jpg', by: 'Minyeong Jeong', u: 'H7FnrACfoAI', alt: ['절 문 너머로 보이는 만개한 벚꽃', '寺の門越しに見える満開の桜'] },
+    { f: 'hero-day-5.jpg', by: 'PJH', u: 'OAwFBZfBA7Q', alt: ['노을빛이 비치는 미야지다케 신사 앞 길', '夕日が差す宮地嶽神社前の道'] }
+  ],
+  night: [
+    { f: 'hero-night-1.jpg', by: 'Fumiaki Hayashi', u: 'Yb7A3XpxqxA', alt: ['나카스 포장마차의 따뜻한 불빛', '中洲の屋台の温かな明かり'] },
+    { f: 'hero-night-2.jpg', by: 'HANVIN CHEONG', u: 'Aqnm4FsFLoQ', alt: ['강변을 따라 늘어선 밤의 포장마차', '川沿いに並ぶ夜の屋台'] },
+    { f: 'hero-night-3.jpg', by: 'Caro Chui', u: 'KF5uPBU1jng', alt: ['빌딩 불빛 아래 포장마차 거리', 'ビルの明かりの下の屋台街'] },
+    { f: 'hero-night-4.jpg', by: 'Bubba', u: 'nymsfOvatio', alt: ['붉은 등이 걸린 포장마차', '赤い提灯の屋台'] }
+  ]
 };
+// 이번에 열었을 때 보여 줄 사진 고르기 (지난번과 겹치지 않게)
+const HERO_PICK = (() => {
+  const last = lsGet('fk-hero-last', {}) || {}, pick = {};
+  for (const sc of Object.keys(HERO_PHOTOS)) {
+    const n = HERO_PHOTOS[sc].length;
+    let i = Math.floor(Math.random() * n);
+    if (n > 1 && i === last[sc]) i = (i + 1 + Math.floor(Math.random() * (n - 1))) % n;
+    pick[sc] = i;
+  }
+  lsSet('fk-hero-last', pick);
+  return pick;
+})();
+function heroPhoto(sc) {
+  const list = HERO_PHOTOS[sc] || HERO_PHOTOS.day, p = list[(HERO_PICK[sc] || 0) % list.length];
+  return { ...p, src: `photos/${p.f}`, url: `https://unsplash.com/photos/${p.u}`, altT: L(p.alt[0], p.alt[1]) };
+}
 
 // 동네 카드 사진 (모두 Unsplash 라이선스) — [사진가, Unsplash 사진 ID]
 const AREA_PHOTOS = {
@@ -3516,7 +3543,7 @@ function heroScene() {
 }
 
 function heroV(f) {
-  const mine = S.heroImg && !S.heroBroken, sc = heroScene(), scL = SCENES.find(x => x[0] === sc)[1], hp = HERO_PHOTOS[sc];
+  const mine = S.heroImg && !S.heroBroken, sc = heroScene(), scL = SCENES.find(x => x[0] === sc)[1], hp = heroPhoto(sc);
   const stock = !mine && !S.photoBroken, photo = mine;
   let txt;
   if (f) {
@@ -3524,7 +3551,7 @@ function heroV(f) {
     txt = `<span class="dday b-${st.k}">${st.label}</span><h1 class="hero-t">${esc(f.title)}</h1><p class="hero-s">${md(f.set.start)} – ${md(f.set.end)} · ${nights(f.days.length)}</p>`;
   } else txt = `<p class="hero-k">FUKUOKA <span lang="ja">福岡</span></p><h1 class="hero-t">후쿠오카,<br>어디부터 갈까요?</h1><p class="hero-s">날짜와 동네만 고르면 동선·교통비까지 짜 드려요</p>`;
   return `<section class="hero t-${sc}${mine || stock ? ' has-photo' : ''}">
-    ${mine ? `<img class="hero-img" src="${S.heroImg}" alt="내가 고른 후쿠오카 사진">` : stock ? `<img class="hero-img stock" src="${hp.src}" alt="${hp.alt}">` : heroSVG()}
+    ${mine ? `<img class="hero-img" src="${S.heroImg}" alt="내가 고른 후쿠오카 사진">` : stock ? `<img class="hero-img stock" src="${hp.src}" alt="${esc(hp.altT)}">` : heroSVG()}
     <div class="hero-shade"></div>
     <div class="hero-top"><span class="brand light">${logoSVG()}후쿠오카 플래너</span><span class="ht-r">${langBtn(true)}<button class="hb" data-act="heroSheet" aria-label="상단 사진 바꾸기">${ic('camera')}</button></span></div>
     ${mine ? '' : `<div class="scene" role="group" aria-label="그림 시간대 (지금: ${scL})">${SCENES.map(([k, l]) => `<button class="${k === sc ? 'on' : ''}" data-act="scene" data-v="${k}" aria-pressed="${k === sc}" aria-label="${l} 풍경으로 보기" title="${l}">${ic('sc_' + k)}</button>`).join('')}</div>`}
@@ -3588,7 +3615,7 @@ function homeV() {
     ${rest.length ? `<h2 class="sec"><span>다른 계획</span></h2><ul class="plist">${rest.map(planRow).join('')}</ul>` : ''}
     <button class="xfer-btn" data-act="xferSheet">${ic('swap')}<span><b>계획 옮기기</b><small>${IS_APP ? '웹 버전에서 만든 계획 가져오기 · 다른 폰으로 보내기' : '앱 버전이나 다른 기기로 보내기 · 가져오기'}</small></span>${ic('next', 'chev')}</button>
     <p class="store-note" id="storeNote">${storeNote()}</p>
-    ${S.heroImg ? '' : `<p class="credit">상단 사진: <a href="${HERO_PHOTOS.day.url}" target="_blank" rel="noopener">${HERO_PHOTOS.day.by}</a> · <a href="${HERO_PHOTOS.night.url}" target="_blank" rel="noopener">${HERO_PHOTOS.night.by}</a> (Unsplash)</p>`}
+    ${S.heroImg ? '' : `<p class="credit">${L('상단 사진', 'トップの写真')} <a href="${heroPhoto(heroScene()).url}" target="_blank" rel="noopener">${heroPhoto(heroScene()).by}</a> · Unsplash</p>`}
   </main></div>`;
 }
 
@@ -3668,7 +3695,7 @@ function heroSheetV() {
     + `<div class="sh-foot col">
       <label class="btn pri pick">${ic('camera')}내 사진 고르기<input type="file" accept="image/*" data-change="heroFile" class="sr"></label>
       ${S.heroImg ? `<button class="btn soft" data-act="heroReset">기본 사진으로 되돌리기</button>` : ''}</div>
-    <p class="note">${ic('save')}<span>사진은 이 기기에만 저장돼요. 다른 기기에서는 기본 후쿠오카 타워 사진이 보여요.</span></p>`;
+    <p class="note">${ic('save')}<span>${L('사진은 이 기기에만 저장돼요. 다른 기기에서는 기본 후쿠오카 사진이 보여요.', '写真はこの端末にだけ保存されます。ほかの端末では標準の福岡の写真が表示されます。')}</span></p>`;
 }
 
 const SHEETS = { air: airSheetV, pass: passSheetV, how: howSheetV, phrase: phraseSheetV, area: areaSheetV, hero: heroSheetV };
@@ -3699,8 +3726,15 @@ function wireHero() {
   const hi = document.querySelector('.hero-img');
   if (!hi) return;
   const stock = hi.classList.contains('stock');
-  hi.addEventListener('error', () => { if (stock) S.photoBroken = true; else S.heroBroken = true; render(); }, { once: true });
-  if (stock && !wireHero.pre) { wireHero.pre = true; Object.values(HERO_PHOTOS).forEach(p => { const im = new Image(); im.src = p.src; }); }
+  hi.addEventListener('error', () => {
+    if (stock) {
+      // 못 불러온 사진은 건너뛰고 다음 사진으로, 다 안 되면 그림으로
+      const sc = heroScene(); S.heroTries = (S.heroTries || 0) + 1;
+      if (S.heroTries < HERO_PHOTOS[sc].length) HERO_PICK[sc] = (HERO_PICK[sc] + 1) % HERO_PHOTOS[sc].length; else S.photoBroken = true;
+    } else S.heroBroken = true;
+    render();
+  }, { once: true });
+  if (stock && !wireHero.pre) { wireHero.pre = true; Object.keys(HERO_PHOTOS).forEach(sc => { const im = new Image(); im.src = heroPhoto(sc).src; }); }
 }
 
 Object.assign(A, {
