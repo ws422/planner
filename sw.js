@@ -1,5 +1,5 @@
-// 후쿠오카 플래너 오프라인 지원 (버전 882d9f1a0f)
-const V = 'fkp-882d9f1a0f', FONTS = 'fkp-fonts';
+// 후쿠오카 플래너 오프라인 지원 (버전 938733aff1)
+const V = 'fkp-938733aff1', FONTS = 'fkp-fonts';
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png", "./icons/apple-touch-icon.png", "./icons/favicon-64.png", "./photos/hero-day-1.jpg", "./photos/hero-day-2.jpg", "./photos/hero-day-3.jpg", "./photos/hero-day-4.jpg", "./photos/hero-day-5.jpg", "./photos/hero-nightview-1.jpg", "./photos/hero-nightview-2.jpg", "./photos/hero-nightview-3.jpg", "./photos/hero-nightview-4.jpg", "./photos/area-bayside.jpg", "./photos/area-beppu.jpg", "./photos/area-dazaifu.jpg", "./photos/area-hakata.jpg", "./photos/area-itoshima.jpg", "./photos/area-mojiko.jpg", "./photos/area-momochi.jpg", "./photos/area-nakasu.jpg", "./photos/area-noko.jpg", "./photos/area-ohori.jpg", "./photos/area-tenjin.jpg", "./photos/area-uminaka.jpg", "./photos/area-yanagawa.jpg", "./photos/area-yufuin.jpg"];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(V).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

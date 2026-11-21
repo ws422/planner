@@ -801,6 +801,49 @@ html[lang="ja"] .kor { display: none; }
 .ph-cr { margin: 2px 4px 4px; text-align: right; font-size: 11px; color: var(--ink-3); }
 .ph-cr a { color: inherit; }
 
+/* 일본어 보여주기: 그대로 보기 / 마주 보기 */
+.face-tg { display: flex; gap: 4px; padding: 4px; margin: 0 0 10px; background: var(--surface-2); border-radius: 999px; }
+.face-tg button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 8px 10px; border-radius: 999px; font-weight: 700; font-size: 14px; color: var(--ink-2); }
+.face-tg button .ic { width: 17px; height: 17px; }
+.face-tg button.on { background: var(--surface); color: var(--ink); box-shadow: var(--sh); }
+.ja-card.face { padding: 0; overflow: hidden; }
+.face-them { transform: rotate(180deg); padding: 28px 18px 24px; }
+.face-them .ja-big { font-size: clamp(32px, 9.5vw, 44px); margin: 0; }
+.face-them .ja-ph { margin-top: 12px; }
+.face-cut { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 0 16px; padding: 10px 0 8px; border-top: 2px dashed var(--line); font-size: 12.5px; font-weight: 700; color: var(--ink-3); }
+.face-cut .ic { width: 15px; height: 15px; flex: none; }
+.face-me { padding: 2px 18px 18px; }
+.face-me small { font-size: 15px; color: var(--ink-2); }
+.face-me .ja-ko { margin-top: 4px; }
+.ja-card.face.anim .face-them { animation: faceFlip .45s cubic-bezier(.3, .7, .2, 1); }
+@keyframes faceFlip { from { transform: rotate(0deg); } to { transform: rotate(180deg); } }
+@media (prefers-reduced-motion: reduce) { .ja-card.face.anim .face-them { animation: none; } }
+.face-tg button.on .ic { color: var(--pri); }
+
+/* 계획 옮기기: 친구에게 보내기 / 받은 계획 */
+.xpick { margin: 0 0 14px; }
+.xpick button { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.xfriend { padding: 16px 16px 12px; border-radius: 18px; background: var(--surface); box-shadow: var(--sh); margin: 0 0 12px; }
+.xfriend h3 { display: flex; align-items: center; gap: 8px; font-size: 16px; margin: 0 0 6px; color: var(--ink); }
+.xfriend h3 .ic { color: var(--pri); width: 18px; height: 18px; }
+.xfriend p { font-size: 13.5px; line-height: 1.55; color: var(--ink-2); margin: 0; }
+.xfriend .sh-foot { margin-top: 10px; padding: 0; }
+.xdev { border-radius: 18px; background: var(--surface-2); padding: 0 14px; }
+.xdev summary { display: flex; align-items: center; gap: 8px; min-height: 52px; font-weight: 700; font-size: 14.5px; color: var(--ink-2); cursor: pointer; list-style: none; }
+.xdev summary::-webkit-details-marker { display: none; }
+.xdev summary span { flex: 1; }
+.xdev summary .ic { width: 18px; height: 18px; }
+.xdev[open] summary .chev { transform: rotate(180deg); }
+.xdev[open] { padding-bottom: 6px; }
+.xdev .sh-foot { padding-bottom: 8px; }
+.rlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.rcard { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: 18px; background: var(--surface); box-shadow: var(--sh); }
+.rc-ic { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--pri-2); color: var(--pri); }
+.rc-t { display: grid; gap: 3px; min-width: 0; }
+.rc-t b { font-size: 16px; color: var(--ink); }
+.rc-t small { font-size: 13px; color: var(--ink-2); }
+.rc-t em { font-style: normal; font-size: 12.5px; font-weight: 700; color: var(--warn); }
+
 </style>
 </head>
 <body>
@@ -2743,6 +2786,8 @@ const JA = {
 const $app = document.getElementById('app');
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const ICON = {
+  phone: '<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>',
+  flip: '<path d="M4.5 10a7.5 7.5 0 0 1 13.3-4.2L20 8"/><path d="M20 3.5V8h-4.5"/><path d="M19.5 14a7.5 7.5 0 0 1-13.3 4.2L4 16"/><path d="M4 20.5V16h4.5"/>',
   walk: '<circle cx="13" cy="4" r="2"/><path d="M12 7l-1 6-2 8M11 13l3 3 1 5M12 8l-4 3M12 8l4 3"/>',
   subway: '<rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M9 14h.01M15 14h.01M8 21l2-4M16 21l-2-4"/>',
   bus: '<rect x="4" y="3" width="16" height="14" rx="2"/><path d="M4 10h16M8 14h.01M16 14h.01M7 17v3M17 17v3"/>',
@@ -2836,7 +2881,7 @@ function updateStoreNote() { const el = document.getElementById('storeNote'); if
 function storeNote() { return store.mode === 'account' ? `${ic('check')}계정에 저장돼요 · 다른 기기에서도 보여요` : `${ic('save')}${IS_APP ? '이 휴대폰에 저장돼요 · 인터넷 없이도 열려요' : '이 브라우저에 저장돼요'}`; }
 
 // ---- 상태 ----
-const S = { view: 'home', plans: store.readLocal(), draft: null, plan: null, saved: true, isNew: false, di: 0, tab: 'sched', sel: null, mapSel: null, sheet: null, undo: [], banner: null, mv: null, toastT: null, rate: lsGet('fk-rate', FARE.krwPer100), hintOff: lsGet('fk-hint-off', false), heroImg: lsGet('fk-hero', null), heroBroken: false, photoBroken: false, areaBroken: {}, scene: null };
+const S = { view: 'home', plans: store.readLocal(), draft: null, plan: null, saved: true, isNew: false, di: 0, tab: 'sched', sel: null, mapSel: null, sheet: null, undo: [], banner: null, mv: null, toastT: null, rate: lsGet('fk-rate', FARE.krwPer100), hintOff: lsGet('fk-hint-off', false), heroImg: lsGet('fk-hero', null), heroBroken: false, photoBroken: false, areaBroken: {}, scene: null, face: lsGet('fk-face', false) };
 function defaultDraft() { const t = new Date(); return { start: null, end: null, hotel: 'hakata', arrive: '10:00', depart: '18:00', dayStart: '09:30', dayEnd: '21:30', areas: [], cal: ymd(new Date(t.getFullYear(), t.getMonth(), 1)) }; }
 function planStatus(p) {
   const t = today();
@@ -3614,7 +3659,7 @@ function homeV() {
     <h2 class="sec"><span>동네 둘러보기</span><small>눌러서 명소 보기</small></h2>
     <div class="acar">${AREAS.map(areaTile).join('')}</div>
     ${rest.length ? `<h2 class="sec"><span>다른 계획</span></h2><ul class="plist">${rest.map(planRow).join('')}</ul>` : ''}
-    <button class="xfer-btn" data-act="xferSheet">${ic('swap')}<span><b>계획 옮기기</b><small>${IS_APP ? '웹 버전에서 만든 계획 가져오기 · 다른 폰으로 보내기' : '앱 버전이나 다른 기기로 보내기 · 가져오기'}</small></span>${ic('next', 'chev')}</button>
+    <button class="xfer-btn" data-act="xferSheet">${ic('swap')}<span><b>계획 옮기기</b><small>${IS_APP ? L('친구에게 계획 보내기 · 다른 폰이나 웹 버전과 주고받기', '友だちに計画を送る · 別のスマホやWeb版とやり取り') : '앱 버전이나 다른 기기로 보내기 · 가져오기'}</small></span>${ic('next', 'chev')}</button>
     <p class="store-note" id="storeNote">${storeNote()}</p>
     ${S.heroImg ? '' : `<p class="credit">${L('상단 사진', 'トップの写真')} <a href="${heroPhoto(heroScene()).url}" target="_blank" rel="noopener">${heroPhoto(heroScene()).by}</a> · Unsplash</p>`}
   </main></div>`;
@@ -3674,10 +3719,24 @@ const PHRASES = [
   ['영수증 주세요', 'レシートください', '레시-토 쿠다사이'],
   ['괜찮아요 (사양할 때)', '大丈夫です', '다이죠-부 데스']
 ];
+// 일본어 보여주기 카드: 「그대로 보기」(지금처럼 들고 보여주기) / 「마주 보기」(위쪽 일본어만 180° 돌려 맞은편 사람이 읽고, 아래 한국어는 내가 읽기)
+function faceToggleV() {
+  const b = (v, icon, t) => `<button class="${!!S.face === v ? 'on' : ''}" data-act="faceMode" data-v="${v ? 1 : 0}" aria-pressed="${!!S.face === v}">${ic(icon)}${t}</button>`;
+  return `<div class="face-tg" role="group" aria-label="${L('보여주는 방식', '見せ方')}">${b(false, 'phone', L('그대로 보기', 'そのまま'))}${b(true, 'flip', L('마주 보기', '向かい合わせ'))}</div>`;
+}
+// o.label: 위 작은 한국어 / o.ja: 상대방이 읽을 일본어 / o.sub: 내가 읽을 한국어(뜻·발음)
+function jaCardV(o) {
+  const cls = o.cls ? ` ${o.cls}` : '';
+  if (!S.face) return faceToggleV() + `<div class="ja-card${cls}">${o.label}${o.ja}${o.sub}</div>`;
+  return faceToggleV() + `<div class="ja-card face${cls}${S.faceAnim ? ' anim' : ''}">
+      <div class="face-them">${o.ja}</div>
+      <p class="face-cut">${ic('up')}<span>${L('휴대폰 위쪽을 상대방 쪽으로 향해 놓아 주세요', 'スマホの上側を相手に向けて置いてください')}</span></p>
+      <div class="face-me">${o.label}${o.sub}</div></div>`;
+}
 function phraseSheetV(sh) {
   const b = PHRASES[sh.i ?? 0];
   return shHead('여행 일본어', '고르면 크게 보여 줘요. 화면을 그대로 보여 주세요.')
-    + `<div class="ja-card"><small data-notr>${esc(b[0])}</small><div class="ja-big" lang="ja">${esc(b[1])}</div><p class="ja-ko" data-notr>${esc(b[2])}</p></div>
+    + jaCardV({ label: `<small data-notr>${esc(b[0])}</small>`, ja: `<div class="ja-big" lang="ja">${esc(b[1])}</div>`, sub: `<p class="ja-ko" data-notr>${esc(b[2])}</p>` }) + `
     <ul class="phl">${PHRASES.map((x, i) => `<li><button class="${i === (sh.i ?? 0) ? 'on' : ''}" data-act="phrase" data-i="${i}" aria-pressed="${i === (sh.i ?? 0)}"><b data-notr>${esc(x[0])}</b><span lang="ja">${esc(x[1])}</span></button></li>`).join('')}</ul>`;
 }
 
@@ -3748,18 +3807,33 @@ Object.assign(A, {
   passSheet() { S.sheet = { type: 'pass' }; render(); },
   howSheet() { S.sheet = { type: 'how' }; render(); },
   phraseSheet() { S.sheet = { type: 'phrase', i: 0 }; render(); },
+  faceMode(d) { S.face = d.v === '1'; lsSet('fk-face', S.face); S.faceAnim = S.face; S.keepSheetScroll = true; render(); S.faceAnim = false; },
   phrase(d) { S.sheet.i = Number(d.i); render(); const s = document.querySelector('.sheet'); if (s) s.scrollTo({ top: 0, behavior: 'smooth' }); },
   areaSheet(d) { S.sheet = { type: 'area', id: d.id }; render(); },
   planArea(d) { S.draft = defaultDraft(); S.draft.areas = [d.id]; S.mv = null; go('dates'); toast(`${AREA[d.id].n}을(를) 넣어 뒀어요. 날짜를 골라 주세요.`); }
 });
 
-// ---- 계획 옮기기 (웹 ↔ 앱 ↔ 다른 기기) ----
+// ---- 계획 옮기기·공유 (웹 ↔ 앱 ↔ 다른 기기 ↔ 친구) ----
 function planCode(plans) {
   const json = JSON.stringify({ v: 1, app: 'fukuoka-planner', at: Date.now(), plans });
   const bytes = new TextEncoder().encode(json); let bin = '';
   for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
   return 'FKP1:' + btoa(bin);
 }
+// 링크용: 압축(deflate) + URL에 안전한 base64 → 「FKZ1.…」. 압축을 못 하는 브라우저면 FKP1 그대로
+const b64u = {
+  enc(u8) { let bin = ''; for (let i = 0; i < u8.length; i += 0x8000) bin += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); },
+  dec(t) { t = t.replace(/-/g, '+').replace(/_/g, '/'); while (t.length % 4) t += '='; const bin = atob(t); return Uint8Array.from(bin, c => c.charCodeAt(0)); }
+};
+async function shareCode(plans) {
+  if (typeof CompressionStream === 'undefined') return planCode(plans);
+  try {
+    const json = JSON.stringify({ v: 1, app: 'fukuoka-planner', at: Date.now(), plans });
+    const buf = await new Response(new Blob([json]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer();
+    return 'FKZ1.' + b64u.enc(new Uint8Array(buf));
+  } catch (e) { return planCode(plans); }
+}
+function shareUrl(code) { return location.href.split('#')[0] + '#share=' + encodeURIComponent(code); }
 function readCode(txt) {
   txt = String(txt || '').trim();
   if (!txt) throw new Error('empty');
@@ -3772,6 +3846,19 @@ function readCode(txt) {
   if (!ok.length) throw new Error('none');
   return ok;
 }
+// 코드·링크 어느 쪽이든 읽기 (FKZ1 압축 코드 / FKP1 코드 / JSON / 링크 통째로 붙여 넣은 것)
+async function readAnyCode(txt) {
+  txt = String(txt || '').trim();
+  try { txt = decodeURIComponent(txt); } catch (e) { }
+  const m = txt.match(/FKZ1\.([A-Za-z0-9_-]+)/);
+  if (m) {
+    if (typeof DecompressionStream === 'undefined') throw new Error('nozip');
+    const buf = await new Response(new Blob([b64u.dec(m[1])]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer();
+    if (buf.byteLength > 4e6) throw new Error('big');
+    return readCode(new TextDecoder().decode(buf));
+  }
+  return readCode(txt);
+}
 function importPlans(list) {
   const map = new Map(S.plans.map(p => [p.id, p])); let add = 0, upd = 0;
   list.forEach(p => { const o = map.get(p.id); if (!o) { map.set(p.id, clone(p)); add++; } else if ((p.updated || 0) > (o.updated || 0)) { map.set(p.id, clone(p)); upd++; } });
@@ -3779,56 +3866,130 @@ function importPlans(list) {
   list.forEach(p => store.put(map.get(p.id)));
   return { add, upd };
 }
+// 받은 계획을 내 것과 따로 사본으로 넣기 (새 id)
+function importCopies(list) {
+  list.forEach((p, i) => {
+    const c = clone(p); c.id = 'plan-' + Date.now().toString(36) + i + Math.random().toString(36).slice(2, 6);
+    c.title = `${p.title} ${L('(받은 계획)', '(届いた計画)')}`; c.created = c.updated = Date.now();
+    S.plans.push(c); store.put(c);
+  });
+  store.writeLocal(S.plans);
+  return { add: list.length, upd: 0 };
+}
 function afterImport(r) {
   S.sheet = null; render(); window.scrollTo(0, 0);
   toast(r.add || r.upd ? `계획 ${r.add}개를 가져왔어요${r.upd ? ` · ${r.upd}개는 최신으로 바꿨어요` : ''}.` : '이미 같은 계획이 있어요.');
 }
+function xferPicked(sh) { return !sh.pick || sh.pick === 'all' ? S.plans : S.plans.filter(p => p.id === sh.pick); }
+// 링크는 미리 만들어 둬요 (공유 버튼을 누른 그 순간에 바로 열려야 해서)
+function prepLink(sh) {
+  const ps = xferPicked(sh), key = sh.pick || 'all';
+  sh.code = planCode(ps); sh.link = shareUrl(sh.code); sh.linkFor = key;
+  shareCode(ps).then(c => { if (S.sheet === sh && (sh.pick || 'all') === key) sh.link = shareUrl(c); });
+}
+async function copyText(txt) {
+  try { await navigator.clipboard.writeText(txt); return true; } catch (e) { }
+  const t = document.createElement('textarea'); t.value = txt; t.setAttribute('readonly', ''); t.style.cssText = 'position:fixed;opacity:0;top:0';
+  document.body.appendChild(t); t.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (e) { } t.remove(); return ok;
+}
 function xferSheetV(sh) {
   const out = sh.m !== 'in', n = S.plans.length;
   const other = IS_APP ? '웹 버전' : '앱';
-  const head = shHead('계획 옮기기', `${other}이나 다른 기기로 계획을 옮겨요. 코드 하나로 전부 옮겨져요.`);
+  const head = shHead('계획 옮기기', IS_APP ? L('친구에게 계획을 보내거나, 다른 폰·웹 버전으로 옮겨요.', '友だちに計画を送ったり、別のスマホ・Web版に移したりします。') : `${other}이나 다른 기기로 계획을 옮겨요. 코드 하나로 전부 옮겨져요.`);
   const seg = `<div class="seg2"><button class="${out ? 'on' : ''}" data-act="xferMode" data-v="out" aria-pressed="${out}">${ic('swap')}보내기</button><button class="${out ? '' : 'on'}" data-act="xferMode" data-v="in" aria-pressed="${!out}">${ic('plus')}가져오기</button></div>`;
   if (out) {
     if (!n) return head + seg + `<p class="note">${ic('alert')}<span>아직 보낼 계획이 없어요. 먼저 계획을 세워 저장해 주세요.</span></p>`;
-    return head + seg + `<ol class="xsteps"><li>아래 <b>코드 복사</b>를 눌러요.</li><li>${other}에서 <b>계획 옮기기 → 가져오기</b>를 열어요.</li><li>코드를 붙여 넣고 <b>가져오기</b>를 눌러요.</li></ol>
-      <label class="xlabel" for="xferOut">계획 ${n}개 · 코드</label>
+    const pick = sh.pick || 'all', cnt = xferPicked(sh).length;
+    const picker = n > 1 ? `<p class="xlabel">${L('보낼 계획', '送る計画')}</p><div class="chips-sel xpick">${[['all', L(`전체 ${n}개`, `すべて(${n}件)`)], ...sortedPlans().map(p => [p.id, `${esc(p.title)} · ${mds(p.set.start)}`])].map(([k, t]) => `<button class="${pick === k ? 'on' : ''}" data-act="xferPick" data-v="${k}" aria-pressed="${pick === k}">${t}</button>`).join('')}</div>` : '';
+    const codeBox = `<ol class="xsteps"><li>아래 <b>코드 복사</b>를 눌러요.</li><li>${other}에서 <b>계획 옮기기 → 가져오기</b>를 열어요.</li><li>코드를 붙여 넣고 <b>가져오기</b>를 눌러요.</li></ol>
+      <label class="xlabel" for="xferOut">계획 ${cnt}개 · 코드</label>
       <textarea id="xferOut" class="code" readonly>${sh.code}</textarea>
-      <div class="sh-foot col"><button class="btn pri" data-act="xferCopy">${ic('copy')}코드 복사</button>
+      <div class="sh-foot col"><button class="btn ${IS_APP ? 'soft' : 'pri'}" data-act="xferCopy">${ic('copy')}코드 복사</button>
         ${IS_APP && navigator.share ? `<button class="btn soft" data-act="xferShare">${ic('share')}카톡·메모로 보내기</button>` : ''}
         ${IS_APP ? `<button class="btn soft" data-act="xferSave">${ic('save')}파일로 저장</button>` : ''}</div>`;
+    if (!IS_APP) return head + seg + picker + codeBox + `<p class="fine">${L('친구에게 보낼 때도 이 코드를 보내면, 친구가 자기 앱의 「가져오기」에 붙여 넣어 쓸 수 있어요.', '友だちに送るときもこのコードを送れば、友だちのアプリの「取り込む」に貼り付けて使えます。')}</p>`;
+    return head + seg + picker + `<section class="xfriend"><h3>${ic('share')}${L('친구에게 보내기', '友だちに送る')}</h3>
+        <p>${L('링크를 카톡으로 보내면 친구가 눌러서 바로 자기 플래너에 넣을 수 있어요. 받은 계획은 친구 쪽에서 따로 고칠 수 있어요.', 'リンクを送ると、友だちはタップしてすぐ自分のプランナーに入れられます。届いた計画は友だち側で別に編集できます。')}</p>
+        <div class="sh-foot col">${navigator.share ? `<button class="btn pri" data-act="xferLinkShare">${ic('share')}${L('링크 보내기', 'リンクを送る')}</button>` : ''}<button class="btn ${navigator.share ? 'soft' : 'pri'}" data-act="xferLinkCopy">${ic('copy')}${L('링크 복사', 'リンクをコピー')}</button></div></section>
+      <details class="xdev"><summary>${ic('swap')}<span>${L('내 다른 폰·웹 버전으로 옮기기 (코드)', '自分の別のスマホ・Web版に移す(コード)')}</span>${ic('down', 'chev')}</summary>${codeBox}</details>`;
   }
   return head + seg + `<label class="xlabel" for="xferIn">받은 코드 붙여 넣기</label>
-    <textarea id="xferIn" class="code" placeholder="FKP1: 로 시작하는 코드를 여기에 붙여 넣으세요" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
+    <textarea id="xferIn" class="code" placeholder="${L('받은 코드나 링크를 여기에 붙여 넣으세요', '届いたコードかリンクをここに貼り付けてください')}" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
     <div class="sh-foot col"><button class="btn pri" data-act="xferImport">${ic('check')}가져오기</button>
       <label class="btn soft pick">${ic('save')}파일에서 가져오기<input type="file" accept=".txt,.json,text/plain,application/json" data-change="xferFile" class="sr"></label></div>
     <p class="fine">같은 계획이 이미 있으면 더 최근에 고친 쪽으로 맞춰요. 지금 있는 다른 계획은 지워지지 않아요.</p>`;
 }
 SHEETS.xfer = xferSheetV; SHEET_LABEL.xfer = '계획 옮기기';
+
+// ---- 친구가 보낸 링크(#share=…)로 열었을 때 ----
+function recvSheetV(sh) {
+  const mine = new Map(S.plans.map(p => [p.id, p])), dup = sh.plans.filter(p => mine.has(p.id));
+  const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  const rows = sh.plans.map(p => {
+    const o = mine.get(p.id), visits = p.days.reduce((t, d) => t + d.items.filter(i => i.sid).length, 0);
+    const areas = (p.areas || []).filter(a => AREA[a]).map(a => AREA[a].n).slice(0, 4).join(' · ');
+    const pu = p.updated || 0, ou = o ? o.updated || 0 : 0;
+    const st = !o ? '' : pu > ou ? L('이미 있는 계획 · 받은 쪽이 더 최근에 고쳤어요', 'すでにある計画 · 届いた方が新しい') : pu === ou ? L('이미 똑같은 계획이 있어요', 'まったく同じ計画がすでにあります') : L('이미 있는 계획 · 내 쪽이 더 최근이에요', 'すでにある計画 · 自分の方が新しい');
+    return `<li class="rcard"><span class="rc-ic">${ic('map')}</span><span class="rc-t"><b>${esc(p.title)}</b><small>${mds(p.set.start)} – ${mds(p.set.end)} · ${L(`${p.days.length}일 · 방문 ${visits}곳`, `${p.days.length}日 · 訪問${visits}か所`)}</small>${areas ? `<small>${esc(areas)}</small>` : ''}${st ? `<em>${st}</em>` : ''}</span></li>`;
+  }).join('');
+  return shHead(L('받은 여행 계획', '届いた旅行プラン'), L('친구가 보낸 계획이에요. 내 플래너에 넣어서 같이 볼 수 있어요.', '友だちから届いた計画です。自分のプランナーに入れて一緒に見られます。'))
+    + `<ul class="rlist">${rows}</ul>
+    <div class="sh-foot col"><button class="btn pri" data-act="recvAdd">${ic('check')}${dup.length ? L('내 플래너에 맞춰 넣기', 'プランナーに反映する') : L('내 플래너에 넣기', 'プランナーに入れる')}</button>
+      ${dup.length ? `<button class="btn soft" data-act="recvCopy">${ic('plus')}${L('사본으로 따로 넣기', 'コピーとして別に入れる')}</button>` : ''}</div>
+    ${dup.length ? `<p class="fine">${L('맞춰 넣기: 같은 계획은 더 최근에 고친 쪽으로 바뀌어요. 사본: 내 계획은 그대로 두고 받은 계획을 하나 더 만들어요.', '反映: 同じ計画は新しく編集した方に合わせます。コピー: 自分の計画はそのままで、届いた計画をもう一つ作ります。')}</p>` : ''}
+    ${IS_APP && !standalone ? `<p class="note">${ic('info')}<span>${L('홈 화면에 설치한 앱에 넣으려면 아래 <b>코드 복사</b>를 누르고, 앱에서 <b>계획 옮기기 → 가져오기</b>에 붙여 넣으세요.', 'ホーム画面のアプリに入れるには、下の<b>コードをコピー</b>を押して、アプリの<b>プランを移す → 取り込む</b>に貼り付けてください。')}</span></p>
+      <button class="btn soft wide" data-act="recvCode">${ic('copy')}${L('코드 복사', 'コードをコピー')}</button>` : ''}`;
+}
+SHEETS.recv = recvSheetV; SHEET_LABEL.recv = L('받은 여행 계획', '届いた旅行プラン');
+async function checkShareLink() {
+  const m = location.hash.match(/^#share=(.+)$/);
+  if (!m) return;
+  try { history.replaceState(null, '', location.href.split('#')[0]); } catch (e) { }
+  try {
+    const plans = await readAnyCode(m[1]);
+    S.sheet = { type: 'recv', plans, code: planCode(plans) }; render();
+  } catch (e) { toast(L('받은 링크에서 계획을 읽지 못했어요. 링크가 중간에 잘리지 않았는지 확인해 주세요.', 'リンクから計画を読み込めませんでした。リンクが途中で切れていないか確認してください。')); }
+}
+window.addEventListener('hashchange', checkShareLink);
+setTimeout(checkShareLink, 0);
+
 function xferFromFile(file) {
   if (!file) return;
   const fr = new FileReader();
-  fr.onload = () => { try { afterImport(importPlans(readCode(fr.result))); } catch (e) { toast('이 파일에서 계획을 찾지 못했어요.'); } };
+  fr.onload = () => { readAnyCode(fr.result).then(l => afterImport(importPlans(l))).catch(() => toast('이 파일에서 계획을 찾지 못했어요.')); };
   fr.onerror = () => toast('파일을 열 수 없어요.');
   fr.readAsText(file);
 }
 Object.assign(A, {
-  xferSheet() { S.sheet = { type: 'xfer', m: 'out', code: planCode(S.plans) }; render(); },
-  xferMode(d) { S.sheet.m = d.v; if (d.v === 'out') S.sheet.code = planCode(S.plans); render(); },
+  xferSheet() { S.sheet = { type: 'xfer', m: 'out', pick: 'all' }; prepLink(S.sheet); render(); },
+  xferMode(d) { S.sheet.m = d.v; if (d.v === 'out') prepLink(S.sheet); render(); },
+  xferPick(d) { S.sheet.pick = d.v; prepLink(S.sheet); S.keepSheetScroll = true; render(); },
   async xferCopy() {
     const t = document.getElementById('xferOut'); if (!t) return;
     try { await navigator.clipboard.writeText(t.value); toast('코드를 복사했어요. 다른 쪽 "가져오기"에 붙여 넣으세요.'); }
     catch (e) { t.focus(); t.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (e2) { } toast(ok ? '코드를 복사했어요.' : '코드가 선택됐어요. 길게 눌러 복사해 주세요.'); }
   },
   xferShare() { navigator.share({ title: '후쿠오카 플래너 계획', text: S.sheet.code }).catch(() => { }); },
+  xferLinkShare() {
+    const ps = xferPicked(S.sheet), t = ps.length === 1 ? ps[0].title : L(`계획 ${ps.length}개`, `計画${ps.length}件`);
+    navigator.share({ title: L('후쿠오카 여행 계획', '福岡旅行プラン'), text: L(`「${t}」 여행 계획을 보냈어요. 링크를 누르면 플래너에 넣을 수 있어요.`, `「${t}」の旅行プランを送りました。リンクをタップするとプランナーに入れられます。`), url: S.sheet.link }).catch(() => { });
+  },
+  async xferLinkCopy() {
+    const ok = await copyText(S.sheet.link);
+    toast(ok ? L('링크를 복사했어요. 카톡에 붙여 넣어 친구에게 보내 주세요.', 'リンクをコピーしました。メッセージに貼り付けて送ってください。') : L('복사하지 못했어요. 「링크 보내기」를 써 주세요.', 'コピーできませんでした。'));
+  },
   xferSave() {
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([S.sheet.code], { type: 'text/plain' }));
     a.download = `fukuoka-plans-${today()}.txt`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   },
-  xferImport() {
-    const t = document.getElementById('xferIn');
-    try { afterImport(importPlans(readCode(t && t.value))); }
-    catch (e) { toast(t && t.value.trim() ? '코드를 읽을 수 없어요. 처음부터 끝까지 다 복사했는지 확인해 주세요.' : '먼저 코드를 붙여 넣어 주세요.'); }
-  }
+  async xferImport() {
+    const t = document.getElementById('xferIn'), v = t && t.value;
+    try { afterImport(importPlans(await readAnyCode(v))); }
+    catch (e) { toast(v && v.trim() ? '코드를 읽을 수 없어요. 처음부터 끝까지 다 복사했는지 확인해 주세요.' : '먼저 코드를 붙여 넣어 주세요.'); }
+  },
+  recvAdd() { afterImport(importPlans(S.sheet.plans)); },
+  recvCopy() { afterImport(importCopies(S.sheet.plans)); },
+  async recvCode() { const ok = await copyText(S.sheet.code); toast(ok ? L('코드를 복사했어요. 앱의 「가져오기」에 붙여 넣으세요.', 'コードをコピーしました。アプリの「取り込む」に貼り付けてください。') : L('복사하지 못했어요.', 'コピーできませんでした。')); }
 });
 if (IS_APP && navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
 
@@ -4067,7 +4228,7 @@ function jaSheet(sh) {
   else if (!B.sid && (B.name === '숙소' || B.j && /周辺/.test(B.j))) { big = '宿泊先のホテル'; phrase = 'このホテルまで お願いします'; ko = `숙소 (${HOTEL_LABEL[p.set.hotel]} 근처)`; note = '호텔 예약 확인서의 호텔 이름·주소를 함께 보여 주세요.'; }
   else { big = B.j || B.name; phrase = `${B.j || B.name}まで お願いします`; ko = B.name; }
   return `<div class="sh-h"><div><h2>일본어로 보여주기</h2><p>택시 기사님이나 역무원에게 이 화면을 보여 주세요.</p></div><button class="ib sm" data-act="closeSheet" aria-label="닫기">${ic('close')}</button></div>
-    <div class="ja-card"><small>목적지 · ${esc(ko)}</small><div class="ja-big" lang="ja">${esc(big)}</div><p class="ja-ph" lang="ja">${esc(phrase)}</p><p class="ja-ko">(${esc(ko)}까지 가 주세요)</p></div>
+    ${jaCardV({ label: `<small>목적지 · ${esc(ko)}</small>`, ja: `<div class="ja-big" lang="ja">${esc(big)}</div><p class="ja-ph" lang="ja">${esc(phrase)}</p>`, sub: `<p class="ja-ko">(${esc(ko)}까지 가 주세요)</p>` })}
     ${note ? `<p class="note">${ic('alert')}<span>${esc(note)}</span></p>` : ''}
     <p class="note">${ic('spark')}<span>길을 물을 땐 「<span lang="ja">${esc(big)}はどこですか？</span>」 (○○는 어디예요?) 라고 보여 주세요.</span></p>`;
 }
