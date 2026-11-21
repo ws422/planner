@@ -926,6 +926,18 @@ html[lang="ja"] .kor { display: none; }
 .xdev-h { margin: 14px 2px 8px; font-size: 13px; font-weight: 800; color: var(--ink); }
 .xdev .fine { margin-top: 6px; padding-bottom: 8px; }
 
+/* 2단계 지도: 내 숙소 핀 */
+.hpin { pointer-events: none; }
+.hpin-b { fill: var(--ink); stroke: var(--surface); stroke-width: 2.5; }
+.hpin-ic { fill: none; stroke: var(--bg); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.hpin-t { font-size: 12.5px; font-weight: 800; fill: var(--ink); paint-order: stroke; stroke: var(--surface); stroke-width: 3.5px; stroke-linejoin: round; }
+.map-hotels { display: flex; align-items: center; gap: 8px; margin: -4px 0 0; padding: 0 14px 12px; font-size: 13px; color: var(--ink-2); }
+.map-hotels > .ic { flex: none; width: 16px; height: 16px; color: var(--ink); }
+.map-hotels span { flex: 1; min-width: 0; font-weight: 700; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.map-hotels b { display: inline-grid; place-items: center; width: 17px; height: 17px; margin-right: 4px; border-radius: 50%; background: var(--ink); color: var(--bg); font: 700 11px var(--num); vertical-align: 1px; }
+.map-hotels i { font-style: normal; margin: 0 6px; color: var(--ink-3); }
+.map-hotels-e { flex: none; padding: 5px 10px; border-radius: 999px; background: var(--surface-2); font-size: 12.5px; font-weight: 700; color: var(--ink-2); }
+
 </style>
 </head>
 <body>
@@ -3135,6 +3147,10 @@ function areaCard(a) {
     <span class="ac-m">${a.kind === 'trip' ? a.far : tm >= 400 ? '하루' : tm >= 240 ? '반나절+' : '반나절'} · ${n}곳</span>
   </button>`;
 }
+function hotelLegendV() {
+  const st = draftHotelStays(); if (!st.length) return '';
+  return `<p class="map-hotels">${ic('home')}<span>${st.map((x, i) => `${st.length > 1 ? `<b>${i + 1}</b>` : ''}${esc(hotelLabelT(x.h))}`).join('<i>·</i>')}</span><button class="map-hotels-e" data-act="toDates">${L('바꾸기', '変更')}</button></p>`;
+}
 function areasV() {
   const D = S.draft, cap = draftCaps(), pct = cap.total ? Math.round(cap.need / cap.total * 100) : 0;
   const msg = !D.areas.length ? '지도나 아래 카드에서 골라 주세요' : cap.trips > cap.N ? '당일치기는 하루에 한 곳만 넣을 수 있어요' : pct <= 70 ? '여유 있어요 · 더 골라도 돼요' : pct <= 100 ? '일정에 딱 맞아요' : '빠듯해요 · 못 넣은 곳은 보류함으로';
@@ -3144,6 +3160,7 @@ function areasV() {
       <div class="rmap" id="rmap"></div>
       <div class="map-ctl"><button class="ib sm" data-act="zoom" data-n="1" aria-label="확대">${ic('plus')}</button><button class="ib sm" data-act="zoom" data-n="-1" aria-label="축소">${ic('minus')}</button></div>
       <p class="map-cap">시내는 크게, 외곽은 작게 그린 안내 지도 · 동그라미를 눌러 고르세요</p>
+      ${hotelLegendV()}
     </section>
     ${groups.map(([t, k]) => `<h2 class="sec">${t}</h2><div class="agrid">${AREAS.filter(a => a.kind === k).map(areaCard).join('')}</div>`).join('')}
   </main>
@@ -4622,8 +4639,28 @@ function drawRegion(el, deco) {
       ? `<g class="apin deco" transform="translate(${f1(p[0])},${f1(p[1])}) scale(${f1(k * 0.85)})"><circle r="9" class="apin-c"/>${lab}</g>`
       : `<g class="apin${on ? ' on' : ''}" data-act="toggleArea" data-id="${a.id}" tabindex="0" role="button" aria-pressed="${on}" aria-label="${a.n}" transform="translate(${f1(p[0])},${f1(p[1])}) scale(${f1(k)})"><circle r="22" class="apin-hit"/><circle r="15" class="apin-c"/>${on ? '<path class="apin-k" d="M-6 0l4 4 8-9"/>' : '<circle r="4" class="apin-d"/>'}${lab}</g>`;
   });
+  if (!deco) h += draftHotelPins(k);
   el.innerHTML = `<svg viewBox="${f1(mv.x)} ${f1(mv.y)} ${f1(mv.w)} ${f1(mv.h)}" role="img" aria-label="후쿠오카 안내 지도"${deco ? '' : ' class="pan"'}>${h}</svg>`;
   if (!deco) enablePan(el.querySelector('svg'), W);
+}
+// 새 여행 2단계 지도: 1단계에서 고른 숙소 자리에 핀 (같은 자리면 하나로 합쳐요)
+function draftHotelStays() {
+  const D = S.draft; if (!D || !D.start || !D.end) return [];
+  return normStays(D.stays, draftNights(), D.hotel);
+}
+function draftHotelPins(k) {
+  const st = draftHotelStays(); if (!st.length) return '';
+  const multi = st.length > 1, groups = new Map();
+  st.forEach((x, i) => { const pt = hotelPt(x.h), key = `${pt.lat.toFixed(4)},${pt.lng.toFixed(4)}`; if (!groups.has(key)) groups.set(key, { pt, n: [] }); groups.get(key).n.push(i + 1); });
+  let h = '';
+  groups.forEach(g => {
+    const p = fish(g.pt.lat, g.pt.lng), lab = multi ? L(`숙소 ${g.n.join('·')}`, `宿${g.n.join('・')}`) : L('내 숙소', '宿');
+    h += `<g class="hpin" transform="translate(${f1(p[0])},${f1(p[1])}) scale(${f1(k)})" aria-hidden="true">
+      <path class="hpin-b" d="M0 0C-4 -7 -12 -11 -12 -19a12 12 0 1 1 24 0c0 8 -8 12 -12 19z"/>
+      <svg x="-7.5" y="-26.5" width="15" height="15" viewBox="0 0 24 24" class="hpin-ic">${ICON.home}</svg>
+      <text class="hpin-t" x="15" y="-14">${esc(lab)}</text></g>`;
+  });
+  return h;
 }
 function enablePan(svg, W) {
   let st = null;
