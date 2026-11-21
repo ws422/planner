@@ -938,6 +938,22 @@ html[lang="ja"] .kor { display: none; }
 .map-hotels i { font-style: normal; margin: 0 6px; color: var(--ink-3); }
 .map-hotels-e { flex: none; padding: 5px 10px; border-radius: 999px; background: var(--surface-2); font-size: 12.5px; font-weight: 700; color: var(--ink-2); }
 
+/* 일정 순서: 끌어서 바꾸기 */
+.sc-row { display: flex; align-items: center; gap: 2px; }
+.sc-row .sc-hit { flex: 1; min-width: 0; }
+.drag-h { flex: none; display: grid; place-items: center; width: 36px; height: 44px; margin: -6px -8px -6px 0; border-radius: 12px; color: var(--ink-3); touch-action: none; cursor: grab; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.drag-h .ic { width: 20px; height: 20px; }
+.drag-h:active, .dragging .drag-h { color: var(--ink); background: var(--surface-2); cursor: grabbing; }
+.tl { position: relative; }
+.tl > li.stop.dragging { position: relative; z-index: 30; pointer-events: none; }
+.tl > li.stop.dragging .sc { box-shadow: 0 14px 34px rgba(21, 32, 58, .22); border-color: var(--ink); transform: scale(1.02); }
+.tl > li.stop.dragging .tm { opacity: 0; }
+.is-dragging { -webkit-user-select: none; user-select: none; }
+.is-dragging .tl > li.leg, .is-dragging .tl > li.ask { opacity: .35; }
+.drop-ind { position: absolute; left: 60px; right: 0; height: 3px; margin-top: -1.5px; border-radius: 3px; background: var(--pri); z-index: 25; pointer-events: none; box-shadow: 0 0 0 3px var(--pri-2); }
+.drop-ind::before { content: ''; position: absolute; left: -5px; top: -3.5px; width: 10px; height: 10px; border-radius: 50%; background: var(--pri); }
+.drop-ind.same { opacity: 0; }
+
 </style>
 </head>
 <body>
@@ -2957,6 +2973,7 @@ const JA = {
 const $app = document.getElementById('app');
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const ICON = {
+  grip: '<path d="M5 8h14M5 12h14M5 16h14"/>',
   phone: '<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>',
   flip: '<path d="M4.5 10a7.5 7.5 0 0 1 13.3-4.2L20 8"/><path d="M20 3.5V8h-4.5"/><path d="M19.5 14a7.5 7.5 0 0 1-13.3 4.2L4 16"/><path d="M4 20.5V16h4.5"/>',
   walk: '<circle cx="13" cy="4" r="2"/><path d="M12 7l-1 6-2 8M11 13l3 3 1 5M12 8l-4 3M12 8l4 3"/>',
@@ -3189,16 +3206,16 @@ function legRow(leg, li) {
     </button></li>`;
 }
 function itemRow(p, r, i, N) {
-  const it = r.it, s = it.sid && SPOT[it.sid], sel = S.sel === it.uid;
+  const it = r.it, s = it.sid && SPOT[it.sid], sel = S.sel === it.uid, N2 = p.days[S.di].items.length;
   const tags = [it.meal === 'L' ? '<span class="tag meal">점심</span>' : it.meal === 'D' ? '<span class="tag meal">저녁</span>' : '', it.src === 'walk' ? '<span class="tag walk">걷다가 들름</span>' : it.src === 'user' ? '<span class="tag">직접 추가</span>' : ''].join('');
   return `<li class="stop${sel ? ' sel' : ''}" id="it-${it.uid}">
     <div class="tm"><b>${fmt(r.arr)}</b><span>${fmt(r.dep)}</span></div>
     <div class="sc">
-      <button class="sc-hit" data-act="sel" data-uid="${it.uid}" aria-expanded="${sel}">
+      <div class="sc-row"><button class="sc-hit" data-act="sel" data-uid="${it.uid}" aria-expanded="${sel}">
         ${s ? catTile(s.c) : catTile(it.cat || (it.place === 'hotel' ? 'bed' : 'free'))}
         <span class="sc-t"><b>${esc(itemName(p, it))}</b><small>${s ? `${CATS[s.c].n} · ` : ''}${dur(it.stay)} 머묾${s && s.j ? ` · <span lang="ja">${esc(s.j)}</span>` : ''}</small></span>
         <span class="num">${i + 1}</span>
-      </button>
+      </button>${N2 > 1 ? `<button type="button" class="drag-h" data-uid="${it.uid}" aria-label="${esc(L(`${itemName(p, it)} 순서 바꾸기 (끌거나 위아래 화살표)`, `${s ? s.j : trText(itemName(p, it))} の順番を変える(ドラッグか上下キー)`))}">${ic('grip')}</button>` : ''}</div>
       ${tags ? `<div class="tags">${tags}</div>` : ''}
       ${s ? `<p class="desc">${esc(s.d)}${s.g ? ' (여러 가게 중 골라서)' : ''}</p>` : ''}
       ${r.warn.map(w => `<p class="warn">${ic('alert')}${esc(w)}</p>`).join('')}
@@ -4423,6 +4440,76 @@ Object.assign(A, {
     const p = S.plan, it = p.days[S.di].items.find(x => x.uid === d.uid); if (!it || !it.sid) return;
     const s = SPOT[it.sid];
     altApply(p, S.di, it, () => { it.n = name; it.lat = s.lat; it.lng = s.lng; it.z = s.z; it.cat = s.c; it.custom = true; delete it.sid; it.src = 'user'; }, name);
+  }
+});
+
+// ---- 일정 순서: ≡ 손잡이를 끌어서 바꾸기 (손가락·마우스 모두) ----
+let DRAG = null;
+function dragStart(e, hnd) {
+  const li = hnd.closest('li.stop'), tl = li && li.closest('.tl'); if (!li || !tl) return;
+  const list = [...tl.querySelectorAll(':scope > li.stop')], from = list.indexOf(li); if (from < 0 || list.length < 2) return;
+  e.preventDefault();
+  const sy = window.scrollY, tlTop = tl.getBoundingClientRect().top + sy;
+  const boxes = list.map(x => { const r = x.getBoundingClientRect(); return { top: r.top + sy, bot: r.bottom + sy }; });
+  const ind = document.createElement('div'); ind.className = 'drop-ind'; tl.appendChild(ind);
+  DRAG = { uid: hnd.dataset.uid, li, tl, list, from, to: from, boxes, tlTop, ind, y0: e.clientY + sy, cy: e.clientY, pid: e.pointerId, raf: 0 };
+  try { hnd.setPointerCapture(e.pointerId); } catch (_) { }
+  li.classList.add('dragging'); document.body.classList.add('is-dragging');
+  if (navigator.vibrate) try { navigator.vibrate(8); } catch (_) { }
+  dragPaint();
+  DRAG.raf = requestAnimationFrame(dragTick);
+}
+function dragPaint() {
+  const d = DRAG; if (!d) return;
+  const y = d.cy + window.scrollY;
+  d.li.style.transform = `translateY(${Math.round(y - d.y0)}px)`;
+  // 끄는 카드를 뺀 나머지 중, 손가락보다 위에 있는(가운데 기준) 카드 수 = 놓을 자리
+  const others = d.boxes.filter((b, i) => i !== d.from);
+  let t = 0; others.forEach(b => { if ((b.top + b.bot) / 2 < y) t++; });
+  d.to = t;
+  const gapY = t < others.length ? others[t].top - 6 : others[others.length - 1].bot + 6;
+  d.ind.style.top = `${Math.round(gapY - d.tlTop)}px`;
+  d.ind.classList.toggle('same', t === d.from);
+}
+function dragTick() {
+  const d = DRAG; if (!d) return;
+  // 화면 위·아래 끝에 가까우면 저절로 스크롤
+  const top = 120, bot = window.innerHeight - 110;
+  const v = d.cy < top ? -Math.min(18, (top - d.cy) / 4 + 2) : d.cy > bot ? Math.min(18, (d.cy - bot) / 4 + 2) : 0;
+  if (v) { window.scrollBy(0, v); dragPaint(); }
+  d.raf = requestAnimationFrame(dragTick);
+}
+function dragEnd(ok) {
+  const d = DRAG; if (!d) return; DRAG = null;
+  cancelAnimationFrame(d.raf);
+  d.li.classList.remove('dragging'); d.li.style.transform = ''; d.ind.remove(); document.body.classList.remove('is-dragging');
+  if (ok && d.to !== d.from) A.dragTo({ uid: d.uid, to: d.to });
+}
+$app.addEventListener('pointerdown', e => {
+  const h = e.target.closest('.drag-h'); if (!h || DRAG || (e.pointerType === 'mouse' && e.button !== 0)) return;
+  dragStart(e, h);
+});
+window.addEventListener('pointermove', e => { if (DRAG && e.pointerId === DRAG.pid) { DRAG.cy = e.clientY; dragPaint(); } }, { passive: true });
+window.addEventListener('pointerup', e => { if (DRAG && e.pointerId === DRAG.pid) dragEnd(true); });
+window.addEventListener('pointercancel', e => { if (DRAG && e.pointerId === DRAG.pid) dragEnd(false); });
+// 키보드: 손잡이에 초점을 두고 ↑↓
+$app.addEventListener('keydown', e => {
+  const h = e.target.closest && e.target.closest('.drag-h'); if (!h || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+  e.preventDefault(); const uid = h.dataset.uid;
+  A.move({ uid, n: e.key === 'ArrowUp' ? -1 : 1 });
+  const nh = document.querySelector(`.drag-h[data-uid="${uid}"]`); if (nh) nh.focus();
+});
+Object.assign(A, {
+  dragTo(d) {
+    const p = S.plan, items = p.days[S.di].items, i = items.findIndex(x => x.uid === d.uid), t = Number(d.to);
+    if (i < 0 || t === i || t < 0 || t >= items.length) return;
+    const before = computeDay(p, S.di);
+    pushUndo(); const [it] = items.splice(i, 1); items.splice(t, 0, it);
+    items.forEach(x => { if (x.fixed) x.fixed = false; }); cleanModes(p, S.di); dirty();
+    const after = computeDay(p, S.di), diff = after.endArr - before.endArr;
+    S.reAsk = (diff >= 10 || after.over > Math.max(0, before.over)) && t < items.length - 1 ? { uid: it.uid, di: S.di, at: S.editN, diff } : null;
+    render();
+    if (!S.reAsk) toast(L(`${itemName(p, it)}을(를) ${t + 1}번째로 옮겼어요.`, `「${it.sid ? SPOT[it.sid].j : itemName(p, it)}」を${t + 1}番目に移しました。`), true);
   }
 });
 
